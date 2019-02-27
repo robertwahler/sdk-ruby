@@ -7,7 +7,7 @@ module AuthorizeNet::SIM
     RANDOM_SEQUENCE_MAX = (1 << 32) - 1
     
     # Our MD5 digest generator.
-    @@digest  = OpenSSL::Digest.new('md5')
+    @@digest  = OpenSSL::Digest.new('sha512')
 
     # The default options for the constructor.
     @@option_defaults = {
@@ -28,7 +28,7 @@ module AuthorizeNet::SIM
     # how much you want to charge (or authorize).
     # 
     # +api_login_id+:: Your API login ID, as a string.
-    # +api_transaction_key+:: Your API transaction key, as a string.
+    # +api_signature_key+:: Your API SHA512 signature key, as a HEX string.
     # +amount+:: The amount of the transaction, as a string, Float or BigDecimal.
     # +options+:: A hash of options. See below for values.
     # 
@@ -41,9 +41,9 @@ module AuthorizeNet::SIM
     # +relay_url+:: A string of the URL that the gateway should hit to get the relay response (defaults to nil).
     # +transaction_type+:: The type of transaction to perform. Defaults to AuthorizeNet::Type::AUTHORIZE_AND_CAPTURE. This value is only used if run is called directly.
     # 
-    def initialize(api_login_id, api_transaction_key, amount, options = {})
+    def initialize(api_login_id, api_signature_key, amount, options = {})
       super()
-      @api_transaction_key = api_transaction_key
+      @api_signature_key = api_signature_key
       @api_login_id = api_login_id
       @amount = decimal_to_value(amount)
       options = @@option_defaults.merge(options)
@@ -71,7 +71,7 @@ module AuthorizeNet::SIM
       if @sequence.nil?
         @sequence = rand(RANDOM_SEQUENCE_MAX)
       end
-      OpenSSL::HMAC.hexdigest(@@digest, @api_transaction_key, "#{@api_login_id.to_s.rstrip}^#{@sequence.to_s.rstrip}^#{@timestamp.to_s.rstrip}^#{@amount.to_s.rstrip}^")
+      OpenSSL::HMAC.hexdigest(@@digest, [@api_signature_key].pack('H*'), "#{@api_login_id.to_s.rstrip}^#{@sequence.to_s.rstrip}^#{@timestamp.to_s.rstrip}^#{@amount.to_s.rstrip}^")
     end
     
     # Returns all the fields needed for the fingerprint. These must all be passed to the SIM
