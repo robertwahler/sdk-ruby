@@ -156,8 +156,48 @@ module AuthorizeNet
         :x_tax_exempt,
         :x_po_num,
         :x_MD5_Hash,
+        :x_SHA2_Hash,
+        :x_test_request,
+        :x_account_number,
         :x_cvv2_resp_code,
         :x_cavv_response
+      ]
+
+      # list of actual field names (no `x_` prefix) in proper order used to
+      # calculate `x_SHA2_Hash`
+      HASH_FIELDS = [
+        :trans_id,
+        :test_request,
+        :response_code,
+        :auth_code,
+        :cvv2_resp_code,
+        :cavv_response,
+        :avs_code,
+        :method,
+        :account_number,
+        :amount,
+
+        :company,
+        :first_name,
+        :last_name,
+        :address,
+        :city,
+        :state,
+        :zip,
+        :country,
+        :phone,
+        :fax,
+
+        :email,
+        :ship_to_company,
+        :ship_to_first_name,
+        :ship_to_last_name,
+        :ship_to_address,
+        :ship_to_city,
+        :ship_to_state,
+        :ship_to_zip,
+        :ship_to_country,
+        :invoice_num
       ]
     end
   end

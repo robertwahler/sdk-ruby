@@ -6,6 +6,7 @@ module AuthorizeNet::SIM
     
     # Our MD5 digest generator.
     @@digest = OpenSSL::Digest.new('md5')
+    @@digestSHA512 = OpenSSL::Digest.new('sha512')
 
     include AuthorizeNet::SIM::Fields
     
@@ -32,6 +33,32 @@ module AuthorizeNet::SIM
         return false
       end
       @@digest.hexdigest("#{merchant_value}#{api_login}#{@fields[:trans_id]}#{@fields[:amount]}").downcase == @fields[:MD5_Hash].downcase
+    end
+
+    # Returns True if the SHA512 hash found in the response payload validates using
+    # the supplied api_login_id and api_signature_key
+    def valid_sha512?(api_login_id, api_signature_key)
+
+      if (!api_login_id || api_login_id.length == 0)
+        return false
+      end
+      if (!api_signature_key || api_signature_key.length == 0)
+        return false
+      end
+      if @fields[:SHA2_Hash].nil?
+        return false
+      end
+
+      text_to_hash = "^"
+      HASH_FIELDS.each do |field|
+        if @fields.include?(field)
+          text_to_hash += @fields[field] + "^"
+        else
+          text_to_hash += "^"
+        end
+      end
+
+      OpenSSL::HMAC.hexdigest(@@digestSHA512, [api_signature_key].pack('H*'), text_to_hash).upcase == @fields[:SHA2_Hash].upcase
     end
     
     # Returns an HTML string that can be returned to the gateway during the Relay Response,
